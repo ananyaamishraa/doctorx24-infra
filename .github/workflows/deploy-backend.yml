@@ -19,26 +19,16 @@ jobs:
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
             -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Debug repo files
-        run: |
-          pwd
-          ls -la
-
-      - name: Build & Push Backend Image
-        run: |
-          docker build -t ananyaamishraa/doctorx24-backend:latest Dcotor24-backend
-          docker push ananyaamishraa/doctorx24-backend:latest
-
       - name: Deploy to EC2 (Blue-Green)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /var/www/doctorx24-infra
-            docker pull ananyaamishraa/doctorx24-backend:latest
+            docker compose pull
             docker compose up -d
-            ./scripts/deploy_backend.sh
+
 
 
