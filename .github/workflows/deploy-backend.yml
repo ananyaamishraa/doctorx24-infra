@@ -26,8 +26,7 @@ jobs:
 
       - name: Build backend image
         run: |
-          docker build -t ananyaamishraa/doctorx24-backend:latest \
-          ./Dcotor24-backend
+          docker build -t ananyaamishraa/doctorx24-backend:latest .
 
       - name: Push backend image
         run: |
