@@ -21,7 +21,7 @@ jobs:
 
       - name: Build & Push Backend Image
         run: |
-          docker build -t ananyaamishraa/doctorx24-backend:latest .
+          docker build -t ananyaamishraa/doctorx24-backend:latest Dcotor24-backend
           docker push ananyaamishraa/doctorx24-backend:latest
 
       - name: Deploy to EC2 (Blue-Green)
