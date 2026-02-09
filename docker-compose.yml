@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  backend-blue:
+    image: ananyaamishraa/doctorx24-backend:latest
+    container_name: doctorx24-backend-blue
+    ports:
+      - "5001:5000"
+    env_file:
+      - /var/www/Dcotor24-backend/.env
+    restart: unless-stopped
+
+  backend-green:
+    image: ananyaamishraa/doctorx24-backend:latest
+    container_name: doctorx24-backend-green
+    ports:
+      - "5002:5000"
+    env_file:
+      - /var/www/Dcotor24-backend/.env
+    restart: unless-stopped
+
