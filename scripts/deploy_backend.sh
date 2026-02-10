@@ -1,28 +1,60 @@
 #!/bin/bash
 set -e
 
-ACTIVE_PORT=$(grep server /etc/nginx/conf.d/active-backend.conf | grep -o '[0-9]\+')
+STATE_FILE="/var/www/doctorx24-infra/state/active_color"
+NGINX_SWITCH_SCRIPT="/var/www/doctorx24-infra/scripts/switch_backend.sh"
 
-if [ "$ACTIVE_PORT" = "5001" ]; then
-  NEW="green"
-  NEW_PORT=5002
+# Read active color
+ACTIVE_COLOR=$(cat "$STATE_FILE")
+
+# Decide target color
+if [ "$ACTIVE_COLOR" = "blue" ]; then
+  TARGET_COLOR="green"
+  TARGET_PORT=5002
 else
-  NEW="blue"
-  NEW_PORT=5001
+  TARGET_COLOR="blue"
+  TARGET_PORT=5001
 fi
 
-echo "Deploying to $NEW ($NEW_PORT)"
+echo "🔁 Active: $ACTIVE_COLOR | Deploying to: $TARGET_COLOR"
 
-docker compose pull backend-$NEW
-docker compose up -d backend-$NEW
+# Rollback function
+rollback() {
+  echo "❌ Health check failed. Rolling back to $ACTIVE_COLOR"
+  echo "$ACTIVE_COLOR" > "$STATE_FILE"
+  bash "$NGINX_SWITCH_SCRIPT"
+  exit 1
+}
 
-echo "Waiting for health check..."
-sleep 15
+# Pull latest image for target
+echo "📦 Pulling image for backend-$TARGET_COLOR..."
+docker compose pull backend-$TARGET_COLOR
 
-curl -f http://127.0.0.1:$NEW_PORT/health
+# Start / recreate target container
+echo "🚀 Starting backend-$TARGET_COLOR..."
+docker compose up -d backend-$TARGET_COLOR
 
-sed -i "s/$ACTIVE_PORT/$NEW_PORT/" /etc/nginx/conf.d/active-backend.conf
-nginx -s reload
+# Wait for container to boot
+echo "⏳ Waiting for backend-$TARGET_COLOR to start..."
+sleep 8
 
-echo "Switched traffic to $NEW"
+# Health check
+echo "🩺 Running health check on backend-$TARGET_COLOR..."
+echo "👉 Hitting: http://localhost:$TARGET_PORT/health"
+
+if curl -sf "http://localhost:$TARGET_PORT/health"; then
+  echo "📡 HTTP STATUS: 200"
+  echo "✅ Health check PASSED for backend-$TARGET_COLOR"
+else
+  rollback
+fi
+
+# Switch traffic
+echo "🔀 Switching traffic..."
+bash "$NGINX_SWITCH_SCRIPT"
+
+# Persist new active color
+echo "$TARGET_COLOR" > "$STATE_FILE"
+
+echo "🎉 Deployment complete. Active backend is now: $TARGET_COLOR"
 
