@@ -1,0 +1,44 @@
+groups:
+- name: backend-alerts
+  rules:
+
+  - alert: BackendContainerDown
+    expr: up{job="backend"} == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "Backend container is DOWN"
+      description: "Backend container has not been reachable for 30 seconds."
+
+  - alert: BackendHighCPU
+    expr: |
+      sum by (container_label_com_docker_compose_service) (
+        rate(container_cpu_usage_seconds_total{
+          job="cadvisor",
+          container_label_com_docker_compose_service=~"backend-blue|backend-green",
+          cpu="total"
+        }[1m])
+      ) > 0.8
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage on backend"
+      description: "CPU usage > 80% for more than 2 minutes."
+
+  - alert: BackendHighMemory
+    expr: |
+      sum by (container_label_com_docker_compose_service) (
+        container_memory_usage_bytes{
+          job="cadvisor",
+          container_label_com_docker_compose_service=~"backend-blue|backend-green"
+        }
+      ) / 1024 / 1024 > 512
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on backend"
+      description: "Backend container memory usage is above 512MB."
+
