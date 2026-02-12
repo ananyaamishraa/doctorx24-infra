@@ -13,19 +13,24 @@ groups:
 
   - alert: BackendHighCPU
     expr: |
-      sum by (container_label_com_docker_compose_service) (
-        rate(container_cpu_usage_seconds_total{
-          job="cadvisor",
-          container_label_com_docker_compose_service=~"backend-blue|backend-green",
-          cpu="total"
-        }[1m])
-      ) > 0.8
-    for: 2m
-    labels:
-      severity: warning
-    annotations:
-      summary: "High CPU usage on backend"
-      description: "CPU usage > 80% for more than 2 minutes."
+      (
+       sum by (container_label_com_docker_compose_service) (
+         rate(container_cpu_usage_seconds_total{
+           job="cadvisor",
+           container_label_com_docker_compose_service=~"backend-blue|backend-green"
+         }[1m])
+       )
+       /
+       count without (cpu) (
+         node_cpu_seconds_total{mode="system"}
+       )
+     ) > 0.7
+   for: 2m
+   labels:
+     severity: warning
+   annotations:
+     summary: "High CPU usage on backend"
+     description: "Backend using >70% of host CPU for more than 2 minutes"
 
   - alert: BackendHighMemory
     expr: |
