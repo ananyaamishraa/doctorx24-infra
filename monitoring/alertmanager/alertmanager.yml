@@ -1,0 +1,20 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'ananyamishra0403@gmail.com'
+  smtp_auth_username: 'ananyamishra0403@gmail.com'
+  smtp_auth_password: 'qxsl yrsm pezm nvdk'
+  smtp_require_tls: true
+
+route:
+  receiver: email-alerts
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+- name: email-alerts
+  email_configs:
+  - to: 'ananyamishra0403@gmail.com'
+    send_resolved: true
+

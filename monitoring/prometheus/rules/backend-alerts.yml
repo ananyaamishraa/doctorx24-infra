@@ -2,14 +2,14 @@ groups:
 - name: backend-alerts
   rules:
 
-  - alert: BackendContainerDown
-    expr: up{job="backend"} == 0
+  - alert: ContainerDown
+    expr: absent(container_last_seen{container=~"doctorx24-backend-.*"})
     for: 30s
     labels:
       severity: critical
     annotations:
-      summary: "Backend container is DOWN"
-      description: "Backend container has not been reachable for 30 seconds."
+      summary: "Backend container is down"
+      description: "No metrics received for backend container for 30 seconds"
 
   - alert: BackendHighCPU
     expr: |
