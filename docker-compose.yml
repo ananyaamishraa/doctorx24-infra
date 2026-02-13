@@ -106,7 +106,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-     gstart_period: 20s
+      start_period: 20s
 
   node-exporter:
     image: prom/node-exporter:v1.8.1
@@ -130,5 +130,4 @@ services:
 
 volumes:
   grafana-data:
-
 
