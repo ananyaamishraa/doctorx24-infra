@@ -9,6 +9,12 @@ services:
     env_file:
       - /var/www/Dcotor24-backend/.env
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   backend-green:
     image: ananyaamishraa/doctorx24-backend:latest
@@ -18,6 +24,12 @@ services:
     env_file:
       - /var/www/Dcotor24-backend/.env
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
@@ -37,40 +49,46 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     privileged: true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   prometheus:
-    image: prom/prometheus:v2.52.0
+    image: prom/prometheus
     container_name: prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.external-url=http://13.51.134.238/prometheus"
-      - "--web.route-prefix=/prometheus"
-      - "--web.enable-lifecycle"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - "--web.external-url=/prometheus"
+      - "--web.route-prefix=/"
     ports:
       - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/rules:/etc/prometheus/rules
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   grafana:
     image: grafana/grafana:10.4.2
     container_name: grafana
+    environment:
+      - GF_SERVER_ROOT_URL=https://api.abhiroom.in/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_HTTP_PORT=3000
     ports:
       - "127.0.0.1:3001:3000"
-    volumes:
-      - grafana-data:/var/lib/grafana
-    environment:
-      - GF_SERVER_PROTOCOL=http
-      - GF_SERVER_DOMAIN=13.51.134.238
-      - GF_SERVER_ROOT_URL=http://13.51.134.238/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      - GF_SECURITY_COOKIE_SECURE=false
-      - GF_SECURITY_COOKIE_SAMESITE=lax
-    depends_on:
-      - prometheus
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
@@ -83,6 +101,12 @@ services:
     ports:
       - "9093:9093"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+     gstart_period: 20s
 
   node-exporter:
     image: prom/node-exporter:v1.8.1
@@ -98,6 +122,11 @@ services:
       - '--path.rootfs=/rootfs'
     ports:
       - "9100:9100"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   grafana-data:
