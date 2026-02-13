@@ -56,12 +56,12 @@ services:
       retries: 3
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.52.0
     container_name: prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.external-url=/prometheus"
-      - "--web.route-prefix=/"
+      - "--web.route-prefix=/prometheus"
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
