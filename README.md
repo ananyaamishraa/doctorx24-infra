@@ -146,7 +146,7 @@ docker ps
 ```
 ### Switch backend (Blue → Green)
 ```bash
-nginx/scripts/switch-backend.conf 
+scripts/switch-backend.sh 
 sudo nginx -s reload
 ```
 ### Load testing
