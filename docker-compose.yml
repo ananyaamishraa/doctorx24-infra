@@ -60,13 +60,15 @@ services:
     container_name: prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--web.external-url=/prometheus"
+      - "--web.external-url=https://api.abhiroom.in/prometheus/"
       - "--web.route-prefix=/prometheus"
+      - "--web.enable-lifecycle"
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/prometheus/rules:/etc/prometheus/rules
+      - prometheus-data:/prometheus
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/prometheus/-/healthy"]
@@ -80,9 +82,13 @@ services:
     environment:
       - GF_SERVER_ROOT_URL=https://api.abhiroom.in/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
-      - GF_SERVER_HTTP_PORT=3000
+      - GF_SERVER_DOMAIN=api.abhiroom.in
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=DoctorX24
     ports:
       - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
@@ -129,5 +135,6 @@ services:
       retries: 3
 
 volumes:
+  prometheus-data:
   grafana-data:
 
